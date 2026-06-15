@@ -1,5 +1,9 @@
 require("dotenv").config();
 
+require("./models/User");
+require("./models/Internship");
+require("./models/Associations");
+
 const app =
   require("./app");
 
