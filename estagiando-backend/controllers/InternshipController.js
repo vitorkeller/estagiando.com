@@ -15,7 +15,7 @@ class InternshipController {
 
             return res
                 .status(201)
-                json(result);
+                .json(result);
 
         } catch (err) {
 
