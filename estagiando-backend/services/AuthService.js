@@ -22,7 +22,7 @@ class AuthService {
             name,
             email,
             password: hash,
-            role : "USER"
+            role: "STUDENT"
         });
 
         return {
@@ -50,6 +50,10 @@ class AuthService {
 
         if (!valid) {
             throw new Error("Credenciais inválidas");
+        }
+
+        if (!user.isActive) {
+            throw new Error("Usuário inativo");
         }
 
         const accessToken = jwt.sign(
