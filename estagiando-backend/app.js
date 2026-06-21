@@ -18,6 +18,9 @@ const AuthRoutes =
 const internshipRoutes =
   require("./routes/InternshipRoutes");
 
+const UserRoutes =
+  require("./routes/UserRoutes");
+
 
 const app = express();
 
@@ -39,6 +42,11 @@ const loginLimiter =
 app.use(
   "/auth/login",
   loginLimiter
+);
+
+app.use(
+    "/users",
+    UserRoutes
 );
 
 app.use(

@@ -8,3 +8,14 @@ User.hasMany(Internship, {
 Internship.belongsTo(User, {
     foreignKey: "userId"
 });
+
+
+User.belongsTo(User, {
+    as: "advisor",
+    foreignKey: "advisorId"
+});
+
+User.hasMany(User, {
+    as: "students",
+    foreignKey: "advisorId"
+});
