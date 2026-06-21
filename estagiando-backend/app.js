@@ -21,6 +21,9 @@ const internshipRoutes =
 const UserRoutes =
   require("./routes/UserRoutes");
 
+const ReportRoutes =
+  require("./routes/ReportRoutes");
+
 
 const app = express();
 
@@ -47,6 +50,11 @@ app.use(
 app.use(
     "/users",
     UserRoutes
+);
+
+app.use(
+    "/",
+    ReportRoutes
 );
 
 app.use(

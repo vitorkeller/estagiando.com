@@ -3,6 +3,7 @@ require("dotenv").config();
 require("./models/User");
 require("./models/Internship");
 require("./models/Associations");
+require("./models/Report");
 
 const app =
   require("./app");
