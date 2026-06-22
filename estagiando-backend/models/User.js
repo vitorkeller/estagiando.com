@@ -20,10 +20,22 @@ const User = sequelize.define("User", {
 
   role: {
     type: DataTypes.ENUM(
-      "ADMIN",
-      "USER"
+      "STUDENT",
+      "ADVISOR",
+      "COORDINATOR"
     ),
-    defaultValue: "USER"
+    defaultValue: "STUDENT"
+  },
+
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
+  },
+
+  advisorId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
 });
 

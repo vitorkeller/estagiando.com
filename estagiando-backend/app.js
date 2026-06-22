@@ -15,6 +15,16 @@ const rateLimit =
 const AuthRoutes =
   require("./routes/AuthRoures");
 
+const internshipRoutes =
+  require("./routes/InternshipRoutes");
+
+const UserRoutes =
+  require("./routes/UserRoutes");
+
+const ReportRoutes =
+  require("./routes/ReportRoutes");
+
+
 const app = express();
 
 app.use(helmet());
@@ -35,6 +45,21 @@ const loginLimiter =
 app.use(
   "/auth/login",
   loginLimiter
+);
+
+app.use(
+    "/users",
+    UserRoutes
+);
+
+app.use(
+    "/",
+    ReportRoutes
+);
+
+app.use(
+    "/internships",
+    internshipRoutes
 );
 
 app.use("/auth", AuthRoutes);
