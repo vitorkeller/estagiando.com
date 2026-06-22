@@ -31,28 +31,28 @@ router.get(
 router.get(
     "/pending",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     InternshipController.findPending
 );
 
 router.patch(
     "/:id/approve",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     InternshipController.approve
 );
 
 router.patch(
     "/:id/reject",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     InternshipController.reject
 );
 
 router.delete(
     "/:id",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     InternshipController.delete
 );
 

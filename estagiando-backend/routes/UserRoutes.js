@@ -10,42 +10,42 @@ const authorize = require("../middlewares/Authorize");
 router.post(
     "/",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     UserController.create
 );
 
 router.get(
     "/",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     UserController.findAll
 );
 
 router.get(
     "/:id",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     UserController.findById
 );
 
 router.put(
     "/:id",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     UserController.update
 );
 
 router.patch(
     "/:id/activate",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     UserController.activate
 );
 
 router.patch(
     "/:id/deactivate",
     auth,
-    authorize("ADMIN"),
+    authorize("COORDINATOR"),
     UserController.deactivate
 );
 

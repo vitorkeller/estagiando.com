@@ -23,7 +23,7 @@ class InternshipService {
     async findAll(user) {
 
         if (
-            user.role === "ADMIN"
+            user.role === "COORDINATOR"
         ) {
             return await Internship.findAll({
                 include: User
@@ -55,7 +55,7 @@ class InternshipService {
         }
 
         if (
-            user.role !== "ADMIN" &&
+            user.role !== "COORDINATOR" &&
             internship.userId !== user.id
         ) {
             throw new Error(

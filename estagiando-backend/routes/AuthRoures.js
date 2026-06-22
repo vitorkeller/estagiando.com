@@ -41,7 +41,7 @@ router.get(
 router.get(
   "/admin",
   auth,
-  authorize("ADMIN"),
+  authorize("COORDINATOR"),
   (req, res) => {
     res.json({
       message:
