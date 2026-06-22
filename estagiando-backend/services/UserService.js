@@ -6,8 +6,7 @@ const User = require("../models/User");
 const VALID_ROLES = [
     "STUDENT",
     "ADVISOR",
-    "COORDINATOR",
-    "ADMIN"
+    "COORDINATOR"
 ];
 
 class UserService {
