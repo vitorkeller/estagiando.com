@@ -3,7 +3,63 @@ const Internship = require("../models/Internship");
 const User = require("../models/User");
 const AuditLogService = require("./AuditLogService");
 
+// Serviços de nuvem onde o link não revela a extensão real do arquivo.
+// Para esses, confiamos que o aluno selecionou o arquivo certo —
+// não há como confirmar o formato sem abrir o link.
+const TRUSTED_CLOUD_DOMAINS = [
+    "drive.google.com",
+    "docs.google.com",
+    "1drv.ms",
+    "onedrive.live.com",
+    "dropbox.com",
+    "www.dropbox.com"
+];
+
 class ReportService {
+
+    isValidUrl(value) {
+
+        try {
+            new URL(value);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    validateAttachmentUrl(attachmentUrl) {
+
+        if (!this.isValidUrl(attachmentUrl)) {
+            throw new Error(
+                "URL do anexo inválida"
+            );
+        }
+
+        const { hostname } = new URL(attachmentUrl);
+
+        const isTrustedCloud =
+            TRUSTED_CLOUD_DOMAINS.some(
+                (domain) =>
+                    hostname === domain ||
+                    hostname.endsWith(`.${domain}`)
+            );
+
+        if (isTrustedCloud) {
+            // Link de Drive/OneDrive/Dropbox: confiamos no aluno
+            // quanto ao formato, já que o link não expõe a extensão.
+            return;
+        }
+
+        if (
+            !attachmentUrl
+                .toLowerCase()
+                .endsWith(".pdf")
+        ) {
+            throw new Error(
+                "Apenas arquivos no formato PDF são aceitos, ou um link do Google Drive / OneDrive / Dropbox"
+            );
+        }
+    }
 
     async create({ internshipId, description, attachmentUrl }, user) {
 
@@ -21,6 +77,10 @@ class ReportService {
             throw new Error(
                 "Acesso negado"
             );
+        }
+
+        if (attachmentUrl) {
+            this.validateAttachmentUrl(attachmentUrl);
         }
 
         const report = await Report.create({
