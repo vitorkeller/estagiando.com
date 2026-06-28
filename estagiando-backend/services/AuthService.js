@@ -6,7 +6,7 @@ const RefreshToken = require("../models/RefreshToken");
 
 class AuthService {
 
-    async register({ name, email, password, role }) {
+    async register({ name, email, password}) {
 
         const exists = await User.findOne({
             where: { email }
