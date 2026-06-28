@@ -4,26 +4,38 @@ const Internship =
 const User =
     require("../models/User");
 
+const AuditLogService =
+    require("./AuditLogService");
+
 class InternshipService {
 
-    async create(data, userId) {
+    async create(data, user) {
 
-        return await Internship.create({
+        const internship = await Internship.create({
 
             ...data,
 
-            userId,
+            userId: user.id,
 
             status:
                 "UNDER_REVIEW"
 
         });
+
+        await AuditLogService.log({
+            entity: "Internship",
+            entityId: internship.id,
+            action: "CREATE",
+            user
+        });
+
+        return internship;
     }
 
     async findAll(user) {
 
         if (
-            user.role === "ADMIN"
+            user.role === "COORDINATOR"
         ) {
             return await Internship.findAll({
                 include: User
@@ -55,7 +67,7 @@ class InternshipService {
         }
 
         if (
-            user.role !== "ADMIN" &&
+            user.role !== "COORDINATOR" &&
             internship.userId !== user.id
         ) {
             throw new Error(
@@ -91,7 +103,7 @@ class InternshipService {
         });
     }
 
-    async approve(id) {
+    async approve(id, user) {
 
         const internship =
             await Internship.findByPk(id);
@@ -101,10 +113,17 @@ class InternshipService {
 
         await internship.save();
 
+        await AuditLogService.log({
+            entity: "Internship",
+            entityId: internship.id,
+            action: "APPROVE",
+            user
+        });
+
         return internship;
     }
 
-    async reject(id) {
+    async reject(id, user) {
 
         const internship =
             await Internship.findByPk(id);
@@ -113,6 +132,13 @@ class InternshipService {
             "REJECTED";
 
         await internship.save();
+
+        await AuditLogService.log({
+            entity: "Internship",
+            entityId: internship.id,
+            action: "REJECT",
+            user
+        });
 
         return internship;
     }
@@ -142,6 +168,14 @@ class InternshipService {
 
         await internship.save();
 
+        await AuditLogService.log({
+            entity: "Internship",
+            entityId: internship.id,
+            action: "FINALIZE",
+            user,
+            details: { comment: comment || null }
+        });
+
         return internship;
     }
 
@@ -169,6 +203,14 @@ class InternshipService {
         internship.finalDecisionAt = new Date();
 
         await internship.save();
+
+        await AuditLogService.log({
+            entity: "Internship",
+            entityId: internship.id,
+            action: "DENY",
+            user,
+            details: { comment: comment || null }
+        });
 
         return internship;
     }

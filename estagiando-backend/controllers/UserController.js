@@ -9,7 +9,8 @@ class UserController {
 
             const result =
                 await UserService.create(
-                    req.body
+                    req.body,
+                    req.user
                 );
 
             return res
@@ -73,7 +74,8 @@ class UserController {
             const result =
                 await UserService.update(
                     req.params.id,
-                    req.body
+                    req.body,
+                    req.user
                 );
 
             return res.json(result);
@@ -95,7 +97,8 @@ class UserController {
             const result =
                 await UserService.setActive(
                     req.params.id,
-                    true
+                    true,
+                    req.user
                 );
 
             return res.json(result);
@@ -117,7 +120,8 @@ class UserController {
             const result =
                 await UserService.setActive(
                     req.params.id,
-                    false
+                    false,
+                    req.user
                 );
 
             return res.json(result);
