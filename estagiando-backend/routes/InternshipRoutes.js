@@ -1,59 +1,70 @@
-const router =
-    require("express").Router();
-
-const auth =
-    require("../middlewares/Auth");
-
-const authorize =
-    require("../middlewares/Authorize");
+const express = require("express");
+const router = express.Router();
 
 const InternshipController =
     require("../controllers/InternshipController");
 
+const auth = require("../middlewares/Auth");
+const authorize = require("../middlewares/Authorize");
+
 router.post(
-    "/",
+    "/internships",
     auth,
     InternshipController.create
 );
 
 router.get(
-    "/",
+    "/internships",
     auth,
     InternshipController.findAll
 );
 
 router.get(
-    "/:id",
-    auth,
-    InternshipController.findById
-);
-
-router.get(
-    "/pending",
+    "/internships/pending",
     auth,
     authorize("COORDINATOR"),
     InternshipController.findPending
 );
 
+router.get(
+    "/internships/ready-for-final-decision",
+    auth,
+    authorize("COORDINATOR"),
+    InternshipController.findReadyForFinalDecision
+);
+
+router.get(
+    "/internships/:id",
+    auth,
+    InternshipController.findById
+);
+
 router.patch(
-    "/:id/approve",
+    "/internships/:id/approve",
     auth,
     authorize("COORDINATOR"),
     InternshipController.approve
 );
 
 router.patch(
-    "/:id/reject",
+    "/internships/:id/reject",
     auth,
     authorize("COORDINATOR"),
     InternshipController.reject
 );
 
-router.delete(
-    "/:id",
+router.patch(
+    "/internships/:id/finalize",
     auth,
     authorize("COORDINATOR"),
-    InternshipController.delete
+    InternshipController.finalize
+);
+
+router.patch(
+    "/internships/:id/deny",
+    auth,
+    authorize("COORDINATOR"),
+    InternshipController.deny
 );
 
 module.exports = router;
