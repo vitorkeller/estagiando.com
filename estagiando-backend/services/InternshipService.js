@@ -23,7 +23,7 @@ class InternshipService {
     async findAll(user) {
 
         if (
-            user.role === "COORDINATOR"
+            user.role === "ADMIN"
         ) {
             return await Internship.findAll({
                 include: User
@@ -55,7 +55,7 @@ class InternshipService {
         }
 
         if (
-            user.role !== "COORDINATOR" &&
+            user.role !== "ADMIN" &&
             internship.userId !== user.id
         ) {
             throw new Error(
@@ -73,6 +73,18 @@ class InternshipService {
             where: {
                 status:
                     "UNDER_REVIEW"
+            },
+
+            include: User
+        });
+    }
+
+    async findReadyForFinalDecision() {
+
+        return await Internship.findAll({
+
+            where: {
+                status: "ACTIVE"
             },
 
             include: User
@@ -99,6 +111,62 @@ class InternshipService {
 
         internship.status =
             "REJECTED";
+
+        await internship.save();
+
+        return internship;
+    }
+
+    async finalize(id, { comment }, user) {
+
+        const internship =
+            await Internship.findByPk(id);
+
+        if (!internship) {
+            throw new Error(
+                "Estágio não encontrado"
+            );
+        }
+
+        if (internship.status !== "ACTIVE") {
+
+            throw new Error(
+                "Apenas estágios ativos podem ser encerrados"
+            );
+        }
+
+        internship.status = "CLOSED";
+        internship.coordinatorComment = comment || null;
+        internship.coordinatorId = user.id;
+        internship.finalDecisionAt = new Date();
+
+        await internship.save();
+
+        return internship;
+    }
+
+    async deny(id, { comment }, user) {
+
+        const internship =
+            await Internship.findByPk(id);
+
+        if (!internship) {
+            throw new Error(
+                "Estágio não encontrado"
+            );
+        }
+
+        if (internship.status !== "ACTIVE") {
+
+            throw new Error(
+                "Apenas estágios ativos podem ser indeferidos"
+            );
+        }
+
+        internship.status = "DENIED";
+        internship.coordinatorComment = comment || null;
+        internship.coordinatorId = user.id;
+        internship.finalDecisionAt = new Date();
 
         await internship.save();
 
