@@ -1,8 +1,14 @@
-const express = require("express");
-const router = express.Router();
+const router =
+	require("express").Router();
+
+const auth =
+	require("../middlewares/Auth");
+
+const authorize =
+	require("../middlewares/Authorize");
 
 const InternshipController =
-    require("../controllers/InternshipController");
+	require("../controllers/InternshipController");
 
 const auth = require("../middlewares/Auth");
 const authorize = require("../middlewares/Authorize");
@@ -37,7 +43,14 @@ router.get(
     "/internships/:id",
     auth,
     InternshipController.findById
+  );
+
+router.post(
+	"/interships",
+	auth,
+	InternshipController.create
 );
+
 
 router.patch(
     "/internships/:id/approve",
@@ -65,6 +78,7 @@ router.patch(
     auth,
     authorize("COORDINATOR"),
     InternshipController.deny
-);
+ );
+
 
 module.exports = router;
