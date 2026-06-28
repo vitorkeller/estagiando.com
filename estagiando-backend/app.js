@@ -24,6 +24,9 @@ const UserRoutes =
 const ReportRoutes =
   require("./routes/ReportRoutes");
 
+const AuditLogRoutes = 
+  require("./routes/AuditLogRoutes");
+
 
 const app = express();
 
@@ -61,6 +64,11 @@ app.use(
     "/internships",
     internshipRoutes
 );
+
+app.use(
+    "/",
+    AuditLogRoutes
+)
 
 app.use("/auth", AuthRoutes);
 

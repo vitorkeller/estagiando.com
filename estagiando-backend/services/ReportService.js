@@ -1,163 +1,185 @@
 const Report = require("../models/Report");
 const Internship = require("../models/Internship");
 const User = require("../models/User");
+const AuditLogService = require("./AuditLogService");
 
 class ReportService {
 
-	async create({ internshipId, description, attachmentUrl }, user) {
+    async create({ internshipId, description, attachmentUrl }, user) {
 
-		const internship = await Internship.findByPk(
-			internshipId
-		);
+        const internship = await Internship.findByPk(
+            internshipId
+        );
 
-		if (!internship) {
-			throw new Error(
-				"Estágio não encontrado"
-			);
-		}
+        if (!internship) {
+            throw new Error(
+                "Estágio não encontrado"
+            );
+        }
 
-		if (internship.userId !== user.id) {
-			throw new Error(
-				"Acesso negado"
-			);
-		}
+        if (internship.userId !== user.id) {
+            throw new Error(
+                "Acesso negado"
+            );
+        }
 
-		return await Report.create({
-			internshipId,
-			description,
-			attachmentUrl: attachmentUrl || null,
-			status: "PENDING"
-		});
-	}
+        const report = await Report.create({
+            internshipId,
+            description,
+            attachmentUrl: attachmentUrl || null,
+            status: "PENDING"
+        });
 
-	async findByInternship(internshipId, user) {
+        await AuditLogService.log({
+            entity: "Report",
+            entityId: report.id,
+            action: "CREATE",
+            user
+        });
 
-		const internship = await Internship.findByPk(
-			internshipId,
-			{
-				include: User
-			}
-		);
+        return report;
+    }
 
-		if (!internship) {
-			throw new Error(
-				"Estágio não encontrado"
-			);
-		}
+    async findByInternship(internshipId, user) {
 
-		const isOwner =
-			internship.userId === user.id;
+        const internship = await Internship.findByPk(
+            internshipId,
+            {
+                include: User
+            }
+        );
 
-		const isAdvisor =
-			user.role === "ADVISOR" &&
-			internship.User.advisorId === user.id;
+        if (!internship) {
+            throw new Error(
+                "Estágio não encontrado"
+            );
+        }
 
-		const isCoordinator =
-			user.role === "COORDINATOR";
+        const isOwner =
+            internship.userId === user.id;
 
-		if (
-			!isOwner &&
-			!isAdvisor &&
-			!isCoordinator
-		) {
-			throw new Error(
-				"Acesso negado"
-			);
-		}
+        const isAdvisor =
+            user.role === "ADVISOR" &&
+            internship.User.advisorId === user.id;
 
-		return await Report.findAll({
-			where: { internshipId },
-			include: {
-				model: User,
-				as: "evaluator",
-				attributes: ["id", "name", "email"]
-			}
-		});
-	}
+        const isCoordinator =
+            user.role === "COORDINATOR";
 
-	async findPending(user) {
+        const isAdmin =
+            user.role === "ADMIN";
 
-		if (
-			user.role !== "ADVISOR" &&
-			user.role !== "COORDINATOR"
-		) {
-			throw new Error(
-				"Acesso negado"
-			);
-		}
+        if (
+            !isOwner &&
+            !isAdvisor &&
+            !isCoordinator &&
+            !isAdmin
+        ) {
+            throw new Error(
+                "Acesso negado"
+            );
+        }
 
-		const include = {
-			model: Internship,
-			include: {
-				model: User,
-				attributes: ["id", "name", "email", "advisorId"]
-			}
-		};
+        return await Report.findAll({
+            where: { internshipId },
+            include: {
+                model: User,
+                as: "evaluator",
+                attributes: ["id", "name", "email"]
+            }
+        });
+    }
 
-		const reports = await Report.findAll({
-			where: { status: "PENDING" },
-			include
-		});
+    async findPending(user) {
 
-		if (user.role === "COORDINATOR") {
-			return reports;
-		}
+        if (
+            user.role !== "ADVISOR" &&
+            user.role !== "COORDINATOR"
+        ) {
+            throw new Error(
+                "Acesso negado"
+            );
+        }
 
-		return reports.filter(
-			(report) =>
-				report.Internship.User.advisorId === user.id
-		);
-	}
+        const include = {
+            model: Internship,
+            include: {
+                model: User,
+                attributes: ["id", "name", "email", "advisorId"]
+            }
+        };
 
-	async evaluate(id, { approve, comment }, user) {
+        const reports = await Report.findAll({
+            where: { status: "PENDING" },
+            include
+        });
 
-		const report = await Report.findByPk(id, {
-			include: {
-				model: Internship,
-				include: User
-			}
-		});
+        if (user.role === "COORDINATOR") {
+            return reports;
+        }
 
-		if (!report) {
-			throw new Error(
-				"Relatório não encontrado"
-			);
-		}
+        return reports.filter(
+            (report) =>
+                report.Internship.User.advisorId === user.id
+        );
+    }
 
-		const studentAdvisorId =
-			report.Internship.User.advisorId;
+    async evaluate(id, { approve, comment }, user) {
 
-		const isAdvisorInCharge =
-			user.role === "ADVISOR" &&
-			studentAdvisorId === user.id;
+        const report = await Report.findByPk(id, {
+            include: {
+                model: Internship,
+                include: User
+            }
+        });
 
-		const isCoordinator =
-			user.role === "COORDINATOR";
+        if (!report) {
+            throw new Error(
+                "Relatório não encontrado"
+            );
+        }
 
-		if (!isAdvisorInCharge && !isCoordinator) {
-			throw new Error(
-				"Acesso negado"
-			);
-		}
+        const studentAdvisorId =
+            report.Internship.User.advisorId;
 
-		if (report.status !== "PENDING") {
-			throw new Error(
-				"Relatório já avaliado"
-			);
-		}
+        const isAdvisorInCharge =
+            user.role === "ADVISOR" &&
+            studentAdvisorId === user.id;
 
-		report.status = approve
-			? "APPROVED"
-			: "REJECTED";
+        const isCoordinator =
+            user.role === "COORDINATOR";
 
-		report.evaluatorComment = comment || null;
-		report.evaluatorId = user.id;
-		report.evaluatedAt = new Date();
+        if (!isAdvisorInCharge && !isCoordinator) {
+            throw new Error(
+                "Acesso negado"
+            );
+        }
 
-		await report.save();
+        if (report.status !== "PENDING") {
+            throw new Error(
+                "Relatório já avaliado"
+            );
+        }
 
-		return report;
-	}
+        report.status = approve
+            ? "APPROVED"
+            : "REJECTED";
+
+        report.evaluatorComment = comment || null;
+        report.evaluatorId = user.id;
+        report.evaluatedAt = new Date();
+
+        await report.save();
+
+        await AuditLogService.log({
+            entity: "Report",
+            entityId: report.id,
+            action: approve ? "APPROVE" : "REJECT",
+            user,
+            details: { comment: comment || null }
+        });
+
+        return report;
+    }
 }
 
 module.exports = new ReportService();

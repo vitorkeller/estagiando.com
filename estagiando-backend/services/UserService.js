@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
 const User = require("../models/User");
+const AuditLogService = require("./AuditLogService");
 
 const VALID_ROLES = [
     "STUDENT",
@@ -18,7 +19,7 @@ class UserService {
             .toString("hex");
     }
 
-    async create({ name, email, role, advisorId }) {
+    async create({ name, email, role, advisorId }, actor) {
 
         const exists = await User.findOne({
             where: { email }
@@ -73,6 +74,14 @@ class UserService {
                     : null
         });
 
+        await AuditLogService.log({
+            entity: "User",
+            entityId: user.id,
+            action: "CREATE",
+            user: actor,
+            details: { role: user.role }
+        });
+
         return {
             id: user.id,
             name: user.name,
@@ -120,7 +129,7 @@ class UserService {
         return user;
     }
 
-    async update(id, { name, email, role, advisorId }) {
+    async update(id, { name, email, role, advisorId }, actor) {
 
         const user = await User.findByPk(id);
 
@@ -179,6 +188,14 @@ class UserService {
 
         await user.save();
 
+        await AuditLogService.log({
+            entity: "User",
+            entityId: user.id,
+            action: "UPDATE",
+            user: actor,
+            details: { role: user.role }
+        });
+
         return {
             id: user.id,
             name: user.name,
@@ -189,7 +206,7 @@ class UserService {
         };
     }
 
-    async setActive(id, isActive) {
+    async setActive(id, isActive, actor) {
 
         const user = await User.findByPk(id);
 
@@ -202,6 +219,13 @@ class UserService {
         user.isActive = isActive;
 
         await user.save();
+
+        await AuditLogService.log({
+            entity: "User",
+            entityId: user.id,
+            action: isActive ? "ACTIVATE" : "DEACTIVATE",
+            user: actor
+        });
 
         return {
             id: user.id,

@@ -4,7 +4,7 @@ require("./models/User");
 require("./models/Internship");
 require("./models/Associations");
 require("./models/Report");
-
+require("./models/AuditLog");
 const app =
   require("./app");
 

@@ -10,7 +10,7 @@ class InternshipController {
             const result =
                 await InternshipService.create(
                     req.body,
-                    req.user.id
+                    req.user
                 );
 
             return res
@@ -100,7 +100,8 @@ class InternshipController {
 
             const result =
                 await InternshipService.approve(
-                    req.params.id
+                    req.params.id,
+                    req.user
                 );
 
             return res.json(result);
@@ -120,7 +121,70 @@ class InternshipController {
 
             const result =
                 await InternshipService.reject(
-                    req.params.id
+                    req.params.id,
+                    req.user
+                );
+
+            return res.json(result);
+
+        } catch (err) {
+
+            return res.status(400).json({
+                message: err.message
+            });
+
+        }
+    }
+
+    async findReadyForFinalDecision(req, res) {
+
+        try {
+
+            const result =
+                await InternshipService.findReadyForFinalDecision();
+
+            return res.json(result);
+
+        } catch (err) {
+
+            return res.status(500).json({
+                message: err.message
+            });
+
+        }
+    }
+
+    async finalize(req, res) {
+
+        try {
+
+            const result =
+                await InternshipService.finalize(
+                    req.params.id,
+                    req.body,
+                    req.user
+                );
+
+            return res.json(result);
+
+        } catch (err) {
+
+            return res.status(400).json({
+                message: err.message
+            });
+
+        }
+    }
+
+    async deny(req, res) {
+
+        try {
+
+            const result =
+                await InternshipService.deny(
+                    req.params.id,
+                    req.body,
+                    req.user
                 );
 
             return res.json(result);
