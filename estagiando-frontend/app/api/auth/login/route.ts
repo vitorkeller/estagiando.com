@@ -1,4 +1,16 @@
 import { NextResponse } from "next/server";
+import { ROLE_HOME, type Role } from "@/app/lib/session";
+
+/** Decodifica o payload do JWT sem verificar assinatura (só para roteamento) */
+function decodeJwtPayload(token: string): { role: Role } | null {
+	try {
+		const [, payloadB64] = token.split(".");
+		const base64 = payloadB64.replace(/-/g, "+").replace(/_/g, "/");
+		return JSON.parse(atob(base64));
+	} catch {
+		return null;
+	}
+}
 
 export async function POST(request: Request) {
 	try {
@@ -17,9 +29,7 @@ export async function POST(request: Request) {
 
 		const backendResponse = await fetch(`${backendUrl}/auth/login`, {
 			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
+			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ email, password }),
 		});
 
@@ -32,27 +42,36 @@ export async function POST(request: Request) {
 			);
 		}
 
-		let redirectTo = "/aluno/estagios";
+		// O backend retorna { accessToken, refreshToken }
+		// A role está codificada dentro do accessToken: { id, role }
+		const payload = decodeJwtPayload(data.accessToken);
+		const role: Role = payload?.role ?? "STUDENT";
+		const redirectTo = ROLE_HOME[role];
 
-		if (data.user?.role === "COORDINATOR") {
-			redirectTo = "/coordenacao/dashboard";
-		} else if (data.user?.role === "ADVISOR") {
-			redirectTo = "/orientador/avaliacoes";
-		}
+		const isProduction = process.env.NODE_ENV === "production";
 
 		const response = NextResponse.json({
 			message: "Login realizado com sucesso.",
 			redirectTo,
-			user: data.user
 		});
 
+		// access_token: vida curta (15 min conforme backend), lido pelo proxy
+		response.cookies.set("access_token", data.accessToken, {
+			httpOnly: true,
+			secure: isProduction,
+			sameSite: "strict",
+			path: "/",
+			maxAge: 60 * 15, // 15 minutos — espelha JWT_EXPIRES_IN do backend
+		});
+
+		// refresh_token: vida longa (7 dias), usado só na rota de renovação
 		if (data.refreshToken) {
 			response.cookies.set("refresh_token", data.refreshToken, {
 				httpOnly: true,
-				secure: process.env.NODE_ENV === "production",
+				secure: isProduction,
 				sameSite: "strict",
-				path: "/auth",
-				maxAge: 60 * 60 * 24
+				path: "/api/auth",  // restrito: só acessível pela rota de refresh
+				maxAge: 60 * 60 * 24 * 7, // 7 dias — espelha REFRESH_EXPIRES_IN
 			});
 		}
 
