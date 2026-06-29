@@ -9,9 +9,7 @@ const authorize =
 
 const InternshipController =
 	require("../controllers/InternshipController");
-
-const auth = require("../middlewares/Auth");
-const authorize = require("../middlewares/Authorize");
+    
 
 router.post(
     "/internships",
